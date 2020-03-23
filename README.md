@@ -1,2 +1,3 @@
-# One-time-pad-cracker
-KAU Computer Secuirty II (DVGC20) Lab 2
+# One-time-pad Cracker
+Written in Go.
+KAU Computer Security II (DVGC20) Lab 2
