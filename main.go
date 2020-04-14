@@ -26,14 +26,23 @@ func main() {
 }
 
 func crack(cipherkeys [][]byte, wordlist []string) (keys []string) {
-	drag(cipherkeys[0], cipherkeys[1], "hello")
+	drag(cipherkeys[0], cipherkeys[1], "the")
 	return keys
 }
 
 func drag(ct1, ct2 []byte, word string) {
-	wordx := hex.EncodeToString([]byte(word))
+	wordx := []byte(word)
 	ctx := xorbytes(ct1, ct2)
-	color.New(color.FgWhite).Printf("Dragging:\n\tword: %s = %+v\n\tct1: %x\n\tct2: %x\n\tctx: %x\n", word, wordx, ct1, ct2, ctx)
+	color.New(color.FgWhite).Printf("Dragging:\n\tword: %s = %x\n\tct1: %x\n\tct2: %x\n\tctx: %x\n\n", word, wordx, ct1, ct2, ctx)
+	for i := 0; i < len(ctx)-len(wordx)+1; i++ {
+		result := xorbytes(ctx[i:i+len(wordx)], wordx)
+		color.New(color.FgWhite).Printf("\t\tDrag %x", ctx[0:i])
+		color.New(color.FgGreen).Printf("%x", ctx[i:i+len(wordx)])
+		if i+len(wordx) < len(ctx) {
+			color.New(color.FgWhite).Printf("%x", ctx[i+len(wordx):len(ctx)])
+		}
+		color.New(color.FgWhite).Printf(" at %d result: %x\n", i, result)
+	}
 }
 
 func xorbytes(a, b []byte) (c []byte) {
