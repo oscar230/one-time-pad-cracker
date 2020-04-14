@@ -22,12 +22,18 @@ func main() {
 
 	color.New(color.FgYellow).Printf("This is the \"One-Time Pad cracker\" by Oscar Andersson at KAU.\n")
 	color.New(color.FgYellow).Printf("Cipherkeys:\t%d\nWordlist:\t\t%d\n", len(cipherkeys), len(wordlist))
-	color.New(color.FgGreen).Printf("Found keys:\t%+v\n", crack(cipherkeys, wordlist))
+	color.New(color.FgGreen).Add(color.Bold).Printf("Keys:\t\t\t%+v\n", crack(cipherkeys, wordlist))
 }
 
 func crack(cipherkeys [][]byte, wordlist []string) (keys []string) {
-	xorbytes(cipherkeys[0], cipherkeys[1])
+	drag(cipherkeys[0], cipherkeys[1], "hello")
 	return keys
+}
+
+func drag(ct1, ct2 []byte, word string) {
+	wordx := hex.EncodeToString([]byte(word))
+	ctx := xorbytes(ct1, ct2)
+	color.New(color.FgWhite).Printf("Dragging:\n\tword: %s = %+v\n\tct1: %x\n\tct2: %x\n\tctx: %x\n", word, wordx, ct1, ct2, ctx)
 }
 
 func xorbytes(a, b []byte) (c []byte) {
@@ -42,7 +48,7 @@ func xorbytes(a, b []byte) (c []byte) {
 	for i := 0; i < len(a); i++ {
 		c = append(c, a[i]^b[i])
 	}
-	color.New(color.FgHiMagenta).Printf("%x ^\n%x =\n%x\n", a, b, c)
+	//color.New(color.FgHiMagenta).Printf("%x ^\n%x =\n%x\n", a, b, c)
 	return c
 }
 
@@ -60,7 +66,6 @@ func prependzero(bs []byte, amount int) (output []byte) {
 func hextobyteslice(input string) (output []byte) {
 	output, err := hex.DecodeString(input)
 	check(err)
-	color.New(color.FgCyan).Printf("HEX string to Byte slice:\t%s == %x\n", input, output)
 	return output
 }
 
