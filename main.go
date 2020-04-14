@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	wordlist := []string{"the", "and", "that", "have", "for", "not", "with", "you", "this", "but", "his", "from", "they", "say", "her", "she", "will", "one", "all", "would", "there", "thier", "what", "hello", "world", "program"}
+	// wordlist := []string{"the", "and", "that", "have", "for", "not", "with", "you", "this", "but", "his", "from", "they", "say", "her", "she", "will", "one", "all", "would", "there", "thier", "what", "hello", "world", "program"}
 
 	f, err := os.Open("cipher")
 	check(err)
@@ -18,6 +18,18 @@ func main() {
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		cipherkeys = append(cipherkeys, hextobyteslice(scanner.Text()))
+	}
+	defer f.Close()
+
+	f, err = os.Open("wordlist")
+	check(err)
+	var wordlist []string
+	scanner = bufio.NewScanner(f)
+	for scanner.Scan() {
+		var text = scanner.Text()
+		if len(text) > 1 {
+			wordlist = append(wordlist, text)
+		}
 	}
 	defer f.Close()
 
@@ -46,7 +58,7 @@ func drag(ct1, ct2 []byte, word string, wordlist []string) string {
 		// color.New(color.FgWhite).Printf(" at %d => %x %s\n", i, result, result)
 		for _, w := range wordlist {
 			if strings.Contains(strings.ToLower(string(result)), w) {
-				color.New(color.FgHiWhite).Add(color.Bold).Printf("\t\tFound")
+				color.New(color.FgHiWhite).Add(color.Bold).Printf("Found")
 				color.New(color.FgHiBlue).Add(color.Bold).Printf(" %s ", result)
 				color.New(color.FgHiWhite).Add(color.Bold).Printf("matched in wordlist at")
 				color.New(color.FgHiGreen).Add(color.Bold).Printf(" %s\n", w)
