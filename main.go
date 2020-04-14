@@ -26,17 +26,11 @@ func main() {
 }
 
 func crack(cipherkeys [][]byte, wordlist []string) (keys []string) {
-	xorbyteslice(cipherkeys[0], cipherkeys[1])
+	xorbytes(cipherkeys[0], cipherkeys[1])
 	return keys
 }
 
-func xorbyteslice(a, b []byte) (c []byte) {
-	c = xorbytes(a, b)
-	return c
-}
-
 func xorbytes(a, b []byte) (c []byte) {
-	//color.New(color.FgMagenta).Printf("len%d\nlen%d\nlen%d\n", len(a), len(b), len(c))
 	if len(a) != len(b) {
 		//Not same lenght prepend 0:s
 		if len(a) > len(b) {
@@ -45,12 +39,10 @@ func xorbytes(a, b []byte) (c []byte) {
 			a = prependzero(a, len(b)-len(a))
 		}
 	}
-	//color.New(color.FgMagenta).Printf("len%d\nlen%d\nlen%d\n", len(a), len(b), len(c))
 	for i := 0; i < len(a); i++ {
 		c = append(c, a[i]^b[i])
-		color.New(color.FgHiGreen).Printf("%d_%b^%b=%b\n", i, a[i], b[i], c[i])
 	}
-	color.New(color.FgHiMagenta).Printf("%x\n%x\n%x\n", a, b, c)
+	color.New(color.FgHiMagenta).Printf("%x ^\n%x =\n%x\n", a, b, c)
 	return c
 }
 
