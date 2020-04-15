@@ -15,14 +15,14 @@ func main() {
 	cipherkeys := loadcipher()
 	wordlist := loadwordlist()
 
-	color.New(color.FgYellow).Printf("Cipherkeys:\t%d\nWordlist:\t\t%d\n", len(cipherkeys), len(wordlist))
+	color.New(color.FgYellow).Printf("Cipherkeys: %d\nWordlist: %d\nCombinations: %d\n", len(cipherkeys), len(wordlist), len(cipherkeys)*len(cipherkeys)*len(wordlist))
 
 	crack(cipherkeys, wordlist)
 }
 
 func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
-	for i, cipherkey := range cipherkeys {
-		color.New(color.FgHiCyan).Printf("%x @ %d with %d dragged words.\n", cipherkey, i, len(dragged[i]))
+	for i, _ := range cipherkeys {
+		color.New(color.FgHiCyan).Printf("Cipher %d with %d dragged words.\n", i, len(dragged[i]))
 		// for _, draggedword := range dragged[i] {
 		// 	color.New(color.FgHiCyan).Printf("\t%s\n", draggedword)
 		// }
@@ -31,25 +31,28 @@ func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
 
 func crack(cipherkeys [][]byte, wordlist []string) {
 	var dragged = make([][]string, len(cipherkeys))
+
 	// Drag phase
+	color.New(color.FgGreen).Add(color.Bold).Printf("Start multithreaded dragging.")
 	timestart := time.Now()
 	for i, c1 := range cipherkeys {
-		timec1start := time.Now()
 		for _, c2 := range cipherkeys {
 			for _, word := range wordlist {
-				var dw = drag(c1, c2, word)
+				var dragchannel chan []string = make(chan []string)
+				go drag(c1, c2, word, dragchannel)
+				var dw = <-dragchannel
 				dragged[i] = append(dragged[i], dw...)
 			}
 		}
-		color.New(color.FgWhite).Printf("\tCipher %d done %ds.\n", i, time.Now().Unix()-timec1start.Unix())
+		color.New(color.FgGreen).Printf("Cipher %d done.\n", i)
 	}
-	color.New(color.FgWhite).Printf("All ciphers total time: %ds.\n", time.Now().Unix()-timestart.Unix())
+	color.New(color.FgGreen).Add(color.Bold).Printf("All ciphers total time: %ds.\n", time.Now().Unix()-timestart.Unix())
 
 	// Analysis phase
 	scan(cipherkeys, dragged, wordlist)
 }
 
-func drag(ct1, ct2 []byte, word string) (dragged []string) {
+func drag(ct1, ct2 []byte, word string, dragchannel chan []string) (dragged []string) {
 	wordx := []byte(word)
 	ctx := xorbytes(ct1, ct2)
 	passes := len(ctx) - len(wordx) + 1
@@ -68,6 +71,7 @@ func drag(ct1, ct2 []byte, word string) (dragged []string) {
 		result := xorbytes(ctx[i:i+len(wordx)], wordx)
 		dragged = append(dragged, string(result))
 	}
+	dragchannel <- dragged
 	return
 }
 
