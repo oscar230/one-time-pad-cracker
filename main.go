@@ -47,13 +47,17 @@ func crack(cipherkeys [][]byte, wordlist []string) {
 }
 
 func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
+	var words [][]string = make([][]string, len(cipherkeys))
+	var limit []int = make([]int, len(cipherkeys))
 	color.New(color.FgHiCyan).Add(color.Bold).Add(color.Underline).Printf("Scanning of dragged words.\n")
 	for i, c := range cipherkeys {
-		color.New(color.FgCyan).Printf("-> Cipher %d with %d dragged words.\n", i, len(dragged[i]))
+		limit[i] = len(c)
+		color.New(color.FgCyan).Printf("-> Cipher %d of length %d with %d dragged words.\n", i, len(c), len(dragged[i]))
 		color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%x\n", c)
 		for _, dw := range dragged[i] {
 			for _, word := range wordlist {
-				if strings.Contains(strings.ToLower(dw), word) == true {
+				if strings.Contains(strings.ToLower(dw), word) || strings.Contains(word, strings.ToLower(dw)) {
+					words[i] = append(words[i], word)
 					color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%s ", dw)
 					color.New(color.FgCyan).Printf("contains ")
 					color.New(color.FgHiBlack).Add(color.Underline).Printf("%s\n", word)
@@ -61,6 +65,11 @@ func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
 			}
 		}
 	}
+	color.New(color.FgCyan).Add(color.Bold).Printf("Done scanning, found a total of %d words.\n", len(words))
+}
+
+func possibleword(words []string, lenghtlimit int) (output []string) {
+	return
 }
 
 func drag(ct1, ct2 []byte, word string, dragchannel chan []string) (dragged []string) {
