@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -47,12 +48,18 @@ func crack(cipherkeys [][]byte, wordlist []string) {
 
 func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
 	color.New(color.FgHiCyan).Add(color.Bold).Add(color.Underline).Printf("Scanning of dragged words.\n")
-	for i := range cipherkeys {
+	for i, c := range cipherkeys {
 		color.New(color.FgCyan).Printf("-> Cipher %d with %d dragged words.\n", i, len(dragged[i]))
-
-		// for _, dw := range dragged[i] {
-		// 	color.New(color.FgCyan).Printf("\t%s\n", dw)
-		// }
+		color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%x\n", c)
+		for _, dw := range dragged[i] {
+			for _, word := range wordlist {
+				if strings.Contains(strings.ToLower(dw), word) == true {
+					color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%s ", dw)
+					color.New(color.FgCyan).Printf("contains ")
+					color.New(color.FgHiBlack).Add(color.Underline).Printf("%s\n", word)
+				}
+			}
+		}
 	}
 }
 
