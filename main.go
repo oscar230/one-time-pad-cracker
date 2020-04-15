@@ -59,16 +59,63 @@ func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
 				if strings.Contains(strings.ToLower(dw), word) || strings.Contains(word, strings.ToLower(dw)) {
 					words[i] = append(words[i], word)
 					color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%s ", dw)
-					color.New(color.FgCyan).Printf("contains ")
+					color.New(color.FgCyan).Printf(" => ")
 					color.New(color.FgHiBlack).Add(color.Underline).Printf("%s\n", word)
 				}
 			}
 		}
 	}
 	color.New(color.FgCyan).Add(color.Bold).Printf("Done scanning, found a total of %d words.\n", len(words))
+	color.New(color.FgHiBlue).Add(color.Bold).Add(color.Underline).Printf("Testing possible sentences.\n")
+	var sentences [][]string = make([][]string, len(cipherkeys))
+	for i, c := range cipherkeys {
+		sentences[i] = findsentence(words[i], limit[i])
+		color.New(color.FgBlue).Printf("Found %d sentences for %x\n", len(sentences[i]), c)
+		for _, s := range sentences[i] {
+			color.New(color.FgBlue).Printf("->%s\n", s)
+		}
+	}
+	var found int
+	for _, s := range sentences {
+		found += len(s)
+	}
+	color.New(color.FgBlue).Add(color.Bold).Printf("Done testing possible sentences. Found a total of %d\n", found)
 }
 
-func possibleword(words []string, lenghtlimit int) (output []string) {
+func findsentence(words []string, length int) (output []string) {
+	for _, sentence1 := range buildsentence("", words, length) {
+		var sentence = sentence1[1:]
+		if len(sentence) == length {
+			color.New(color.FgHiBlack).Add(color.Bold).Printf("Built=%s\n", sentence)
+			output = append(output, sentence)
+		} else {
+			color.New(color.FgHiBlack).Printf("Built=%s\n", sentence)
+		}
+	}
+	return
+}
+
+func buildsentence(start string, words []string, length int) (output []string) {
+	if length > 0 {
+		for i, word := range words {
+			// Remaining words
+			var remaining = words[i+1:]
+			if i > 0 {
+				remaining = append(remaining, words[0:i]...)
+			}
+
+			// Add sentence with only the word
+			output = append(output, start+" "+word)
+
+			// Add sentence with the word and reitterate
+			if len(remaining) > 0 {
+				var lastout = output[len(output)-1]
+				for _, sentence := range buildsentence(lastout, remaining, length-len(lastout)) {
+					output = append(output, sentence)
+				}
+			}
+		}
+	}
 	return
 }
 
