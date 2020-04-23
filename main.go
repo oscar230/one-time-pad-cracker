@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/hex"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -46,6 +47,38 @@ func crack(cipherkeys [][]byte, wordlist []string) {
 	scan(cipherkeys, dragged, wordlist)
 }
 
+func validate(drag, word string) bool {
+	drag = strings.ToLower(drag)
+	word = strings.ToLower(word)
+
+	// Speical chars
+	dragok, err := regexp.MatchString("(^[a-zA-Z]+$)", drag)
+	check(err)
+	if !dragok {
+		return false
+	}
+
+	if strings.Contains(drag, word) {
+		return true
+	}
+
+	return false
+}
+
+func checkdragged(draglist []string, wordlist []string) (output []string) {
+	for _, dw := range draglist {
+		for _, word := range wordlist {
+			if validate(dw, word) {
+				output = append(output, word)
+				// color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%s", dw)
+				// color.New(color.FgCyan).Printf(" => ")
+				// color.New(color.FgHiBlack).Add(color.Underline).Printf("%s\n", word)
+			}
+		}
+	}
+	return
+}
+
 func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
 	var words [][]string = make([][]string, len(cipherkeys))
 	var limit []int = make([]int, len(cipherkeys))
@@ -54,25 +87,17 @@ func scan(cipherkeys [][]byte, dragged [][]string, wordlist []string) {
 		limit[i] = len(c)
 		color.New(color.FgCyan).Printf("-> Cipher %d of length %d with %d dragged words.\n", i, len(c), len(dragged[i]))
 		color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%x\n", c)
-		for _, dw := range dragged[i] {
-			for _, word := range wordlist {
-				if strings.Contains(strings.ToLower(dw), word) || strings.Contains(word, strings.ToLower(dw)) {
-					words[i] = append(words[i], word)
-					color.New(color.FgHiBlack).Add(color.Underline).Printf("\t%s ", dw)
-					color.New(color.FgCyan).Printf(" => ")
-					color.New(color.FgHiBlack).Add(color.Underline).Printf("%s\n", word)
-				}
-			}
-		}
+		words[i] = checkdragged(dragged[i], wordlist)
+		color.New(color.FgHiBlack).Printf("\t%d words are valid.\n", len(words[i]))
 	}
-	color.New(color.FgCyan).Add(color.Bold).Printf("Done scanning, found a total of %d words.\n", len(words))
+	color.New(color.FgCyan).Add(color.Bold).Printf("Done scanning.\n")
 	color.New(color.FgHiBlue).Add(color.Bold).Add(color.Underline).Printf("Testing possible sentences.\n")
 	var sentences [][]string = make([][]string, len(cipherkeys))
 	for i, c := range cipherkeys {
 		sentences[i] = findsentence(words[i], limit[i])
 		color.New(color.FgBlue).Printf("Found %d sentences for %x\n", len(sentences[i]), c)
 		for _, s := range sentences[i] {
-			color.New(color.FgBlue).Printf("->%s\n", s)
+			color.New(color.FgBlue).Printf("\t%s\n", s)
 		}
 	}
 	var found int
@@ -86,10 +111,7 @@ func findsentence(words []string, length int) (output []string) {
 	for _, sentence1 := range buildsentence("", words, length) {
 		var sentence = sentence1[1:]
 		if len(sentence) == length {
-			color.New(color.FgHiBlack).Add(color.Bold).Printf("Built=%s\n", sentence)
 			output = append(output, sentence)
-		} else {
-			color.New(color.FgHiBlack).Printf("Built=%s\n", sentence)
 		}
 	}
 	return
@@ -185,7 +207,9 @@ func loadwordlist() (wordlist []string) {
 	check(err)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
-		wordlist = append(wordlist, scanner.Text())
+		if len(scanner.Text()) > 1 {
+			wordlist = append(wordlist, scanner.Text())
+		}
 	}
 	defer f.Close()
 	return
